@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darwix AI Assessment</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .feature-card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f8f9fa;
+        }
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        .btn:hover {
+            background: #764ba2;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result-area {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        .segment {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        .speaker {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .status.running {
+            background: #d4edda;
+            color: #155724;
+        }
+        .textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+        }
+        .suggestions {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .suggestion-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .suggestion-item:hover {
+            background: #e8f5e8;
+        }
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 10px;
+            }
+            .header {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Darwix AI Assessment</h1>
+            <p class="subtitle">Audio Transcription with Diarization & AI Blog Title Suggestions</p>
+            
+            <div class="status running">✅ Django Server Running</div>
+            <div class="status running">🎵 Whisper (Local) Ready</div>
+            <div class="status running">🧠 AI Models Loaded</div>
+        </div>
+        
+        <div class="features-grid">
+            <!-- Audio Transcription Feature -->
+            <div class="feature-card">
+                <h3>🎙️ Audio Transcription with Diarization</h3>
+                <p>Upload audio files and get accurate transcriptions with speaker identification. No FFmpeg required!</p>
+                
+                <div class="upload-area" id="audioUploadArea">
+                    <div id="uploadPrompt">
+                        <p>📁 Drag & drop audio file here or click to browse</p>
+                        <p style="font-size: 14px; color: #666;">Supports: MP3, WAV, M4A, FLAC, OGG</p>
+                    </div>
+                    <input type="file" id="audioFileInput" accept="audio/*" style="display: none;">
+                </div>
+                
+                <div class="loading" id="audioLoading">
+                    <div class="spinner"></div>
+                    <p>Processing audio... This may take a few minutes.</p>
+                </div>
+                
+                <div class="result-area" id="audioResults">
+                    <h4>Transcription Results</h4>
+                    <div id="transcriptionContent"></div>
+                </div>
+            </div>
+            
+            <!-- Title Suggestions Feature -->
+            <div class="feature-card">
+                <h3>📝 AI Blog Title Suggestions</h3>
+                <p>Generate engaging blog post titles using advanced NLP. Powered by Groq API with local model fallback.</p>
+                
+                <textarea class="textarea" id="blogContent" placeholder="Enter your blog post content here..."></textarea>
+                
+                <button class="btn" id="generateTitlesBtn" onclick="generateTitles()">
+                    Generate Title Suggestions
+                </button>
+                
+                <div class="loading" id="titleLoading">
+                    <div class="spinner"></div>
+                    <p>Generating titles...</p>
+                </div>
+                
+                <div class="suggestions" id="titleSuggestions" style="display: none;">
+                    <h4>Suggested Titles</h4>
+                    <div id="suggestionsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Audio Transcription Functionality
+        const audioUploadArea = document.getElementById('audioUploadArea');
+        const audioFileInput = document.getElementById('audioFileInput');
+        const audioLoading = document.getElementById('audioLoading');
+        const audioResults = document.getElementById('audioResults');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+
+        // Drag and drop handlers
+        audioUploadArea.addEventListener('click', () => audioFileInput.click());
+        audioUploadArea.addEventListener('dragover', handleDragOver);
+        audioUploadArea.addEventListener('dragleave', handleDragLeave);
+        audioUploadArea.addEventListener('drop', handleDrop);
+        audioFileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            audioUploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            audioUploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            audioUploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processAudioFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processAudioFile(file);
+            }
+        }
+
+        async function processAudioFile(file) {
+            // Validate file type
+            const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/flac', 'audio/ogg', 'audio/mpeg'];
+            if (!allowedTypes.some(type => file.type.includes(type.split('/')[1]))) {
+                alert('Please select a valid audio file (MP3, WAV, M4A, FLAC, OGG)');
+                return;
+            }
+
+            // Show loading
+            uploadPrompt.style.display = 'none';
+            audioLoading.style.display = 'block';
+            audioResults.style.display = 'none';
+
+            try {
+                // Create FormData and upload
+                const formData = new FormData();
+                formData.append('audio_file', file);
+
+                const response = await fetch('/api/transcribe/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                // Hide loading
+                audioLoading.style.display = 'none';
+                uploadPrompt.style.display = 'block';
+
+                if (result.success) {
+                    displayTranscriptionResults(result);
+                } else {
+                    alert('Transcription failed: ' + result.error);
+                }
+            } catch (error) {
+                audioLoading.style.display = 'none';
+                uploadPrompt.style.display = 'block';
+                alert('Error processing audio: ' + error.message);
+            }
+        }
+
+        function displayTranscriptionResults(result) {
+            const content = document.getElementById('transcriptionContent');
+            
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <strong>Language:</strong> ${result.language || 'Unknown'}<br>
+                    <strong>Duration:</strong> ${result.duration ? result.duration.toFixed(1) + 's' : 'Unknown'}<br>
+                    <strong>Speakers:</strong> ${result.speakers_count || 1}
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h5>Full Transcription:</h5>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                        ${result.full_text || 'No transcription available'}
+                    </div>
+                </div>
+            `;
+
+            if (result.segments && result.segments.length > 0) {
+                html += '<h5>Detailed Segments:</h5>';
+                result.segments.forEach(segment => {
+                    html += `
+                        <div class="segment">
+                            <div class="speaker">${segment.speaker || 'Speaker'}</div>
+                            <div class="timestamp">${formatTime(segment.start)} - ${formatTime(segment.end)}</div>
+                            <div>${segment.text}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            content.innerHTML = html;
+            audioResults.style.display = 'block';
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Title Suggestions Functionality
+        async function generateTitles() {
+            const content = document.getElementById('blogContent').value.trim();
+            const titleLoading = document.getElementById('titleLoading');
+            const titleSuggestions = document.getElementById('titleSuggestions');
+            const generateBtn = document.getElementById('generateTitlesBtn');
+
+            if (!content) {
+                alert('Please enter some blog content first');
+                return;
+            }
+
+            if (content.length < 50) {
+                alert('Please enter at least 50 characters for meaningful title generation');
+                return;
+            }
+
+            // Show loading
+            generateBtn.disabled = true;
+            titleLoading.style.display = 'block';
+            titleSuggestions.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/suggest-titles/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+
+                const result = await response.json();
+
+                // Hide loading
+                titleLoading.style.display = 'none';
+                generateBtn.disabled = false;
+
+                if (result.success) {
+                    displayTitleSuggestions(result);
+                } else {
+                    alert('Title generation failed: ' + result.error);
+                }
+            } catch (error) {
+                titleLoading.style.display = 'none';
+                generateBtn.disabled = false;
+                alert('Error generating titles: ' + error.message);
+            }
+        }
+
+        function displayTitleSuggestions(result) {
+            const content = document.getElementById('suggestionsContent');
+            
+            let html = `
+                <div style="margin-bottom: 15px; font-size: 14px; color: #666;">
+                    Generated using: ${result.method_used || 'AI'} | Content length: ${result.content_length || 0} characters
+                </div>
+            `;
+
+            if (result.suggestions && result.suggestions.length > 0) {
+                result.suggestions.forEach((suggestion, index) => {
+                    html += `
+                        <div class="suggestion-item" onclick="copyTitle('${suggestion.replace(/'/g, "\\'")}')">
+                            <strong>${index + 1}.</strong> ${suggestion}
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">Click to copy</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p>No suggestions generated. Please try with different content.</p>';
+            }
+
+            content.innerHTML = html;
+            document.getElementById('titleSuggestions').style.display = 'block';
+        }
+
+        function copyTitle(title) {
+            navigator.clipboard.writeText(title).then(() => {
+                // Show temporary feedback
+                const originalText = event.target.innerHTML;
+                event.target.innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    event.target.innerHTML = originalText;
+                }, 1000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = title;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Title copied to clipboard!');
+            });
+        }
+
+        // CSRF token helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Auto-resize textarea
+        document.getElementById('blogContent').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    </script>
+</body>
+</html>
