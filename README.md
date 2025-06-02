@@ -22,8 +22,6 @@ A Django-based web application that provides AI-powered audio transcription with
 ### Backend
 - **Django 4.2.7**: Core web framework
 - **Django REST Framework 3.14.0**: API development
-- **Whisper**: Local audio transcription model
-- **Pyannote Audio 3.1.1**: Speaker diarization
 - **Groq API**: LLM integration for title generation
 - **Google Gemini 1.5 Pro**: Advanced transcription capabilities
 
@@ -49,8 +47,8 @@ A Django-based web application that provides AI-powered audio transcription with
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd darwixai_task
+   git clone https://github.com/ShivamShrivastava18/darwixai
+   cd darwixai
    ```
 
 2. **Create and activate a virtual environment**
@@ -144,13 +142,4 @@ darwix_ai/
 3. Click "Generate Title Suggestions"
 4. Select and copy your preferred title
 
-## 🔒 Security Notes
-- API keys are stored in environment variables for security
-- File uploads are validated for type and size
-- Temporary files are automatically cleaned up
 
-## 🤝 Contributing
-Contributions, issues, and feature requests are welcome!
-
-## 📄 License
-[Include your license information here]
